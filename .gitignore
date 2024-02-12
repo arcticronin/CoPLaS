@@ -1,0 +1,9 @@
+*.zip
+*.png
+
+/survival_functions/
+/metrics/
+/processed/
+/splits/
+/__pycache__/
+/.ipynb_checkpoints/
