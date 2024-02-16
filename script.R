@@ -32,7 +32,10 @@ cox_lasso_model_with_offset <- function(df) {
   
   # Extracting coefficients
   coef_vector <- as.vector(coef(best_fit, s = best_lambda))
-  #coef_df <- data.frame(coefficient = coef_vector, row.names = c("(Intercept)", predictors))
+  
+  # handling intercept is not strictly recommended in COX, and not itnterpretable, 
+  # so I'm leaving it out
+  # coef_df <- data.frame(coefficient = coef_vector, row.names = c("(Intercept)", predictors))
   coef_df <- data.frame(coefficient = coef_vector, row.names = predictors)
   
   # Return results
