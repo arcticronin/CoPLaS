@@ -1,5 +1,6 @@
 *.zip
 *.png
+*.RData
 
 /survival_functions/
 /metrics/
