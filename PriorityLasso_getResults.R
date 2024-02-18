@@ -11,8 +11,20 @@ library(reshape2)
 library(dplyr)
 library(tidyr)
 
-# todo, aggiungi il preprocessing qui
- 
+#preproc, remove dependent var and iupdate indices
+
+data = read.csv("preprocessed.csv")
+indices = read.csv("indices_for_preprocessed.csv")
+
+X <- as.matrix(data[, !(names(data) %in% c("time", "event", "X"))])  # Predictor matrix
+y <- Surv(data$time, data$event)  # Response variable for survival analysis
+
+indices$index[2:nrow(indices)] <- indices$index[2:nrow(indices)] - 2
+
+blocks = list(bp1=1:2, bp2=3:1999, bp3=2000:2487, bp4=2488:3188, bp5=3189:5464, bp6=5465:5587, bp7=5588:7036, bp8=7037:8376)
+
+# Creare una lista per memorizzare le liste di indici
+list_of_indices <- list()
 
 set.seed(42)
 
@@ -26,21 +38,25 @@ for(i in 1:5){
   # Split data into training and test sets
   test_indices <- which(folds == i)
   train_indices <- which(folds != i)
-  train_data <- data[train_indices, ]
-  test_data <- data[test_indices, ]
+  train_data <- X[train_indices, ]
+  test_data <- X[test_indices, ]
   
   # Fit model on training data
-  y_train <- with(train_data, Surv(time, event))
-  x_train <- as.matrix(train_data[, setdiff(names(train_data), c("time", "event"))])
+  y_train = y[train_indices,]
+  x_train = X[train_indices,]
   
   #fit <- TODO aggiungi il fit qui
+  fit <- prioritylasso(Y= y_train, X = x_train, blocks = blocks, family = "cox", block1.penalization = TRUE, type.measure = "deviance",lambda.type = "lambda.min", nfolds = 5)
   
   # Predict on test data
-  x_test <- as.matrix(test_data[, setdiff(names(test_data), c("time", "event"))])
-  predictions <- predict(fit, newx = x_test, s = "lambda.min")
+  x_test <- X[test_indices,]
+  y_test = y[test_indices,]
+  predictions <- predict(fit, newx = x_test, s = "lambda.min", type="response")
+  print(predictions)
+  #print(y[test_indices,])
   
   # Calculate C-index for test data
-  c_index <- survConcordance(Surv(test_data$time, test_data$event) ~ predictions)$concordance
+  c_index <- concordance(y_test ~ predictions)$concordance
   
   # Save results
   cv_results <- rbind(cv_results, data.frame(fold = i, c_index = c_index))
