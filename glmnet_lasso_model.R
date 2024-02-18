@@ -1,6 +1,16 @@
+# survival
 library(survival)
 library(glmnet)
 library(prioritylasso)
+
+# plotting
+library(ggplot2)
+library(reshape2)
+
+# confidence interval
+library(dplyr)
+library(tidyr)
+
 
 setwd("/home/ronin/Dev/notebooks/thesis_notebook/")
 
@@ -162,5 +172,47 @@ automate_ridge_fitting <- function(data, indices_for_preprocessed) {
   return(scores)
 }
 
-# Usage
-scores <- automate_ridge_fitting(data, indices_for_preprocessed)
+# Define the number of iterations
+num_iterations <- 100
+
+# Initialize a list to store results from each iteration
+all_scores <- list()
+
+# Loop through the number of iterations
+for (i in 1:num_iterations) {
+  # Run the function and ensure the output is a DataFrame or matrix
+  result <- automate_ridge_fitting(data, indices_for_preprocessed)
+  
+  # If result is not a data.frame or matrix, convert it to one
+  if (!is.data.frame(result) && !is.matrix(result)) {
+    result <- as.data.frame(result)
+  }
+  
+  all_scores[[i]] <- result
+}
+
+# Convert the list of data frames to a single data frame
+# Bind the data frames by row
+scores_df <- do.call(rbind, all_scores)
+
+# Check the type of scores_df
+typeof(scores_df)
+class(scores_df)
+
+apply(scores_df, 2, var)
+
+
+# Calcolare media e intervallo di confidenza
+df_summary <- scores_df %>%
+  pivot_longer(everything()) %>%
+  group_by(name) %>%
+  summarize(media = mean(value), 
+            IC_inferiore = media - qt(0.975, df = n()-1) * sd(value) / sqrt(n()), 
+            IC_superiore = media + qt(0.975, df = n()-1) * sd(value) / sqrt(n()))
+
+# Creare il grafico
+ggplot(df_summary[-2,], aes(x = name, y = media)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = IC_inferiore, ymax = IC_superiore), width = 0.2) +
+  theme_minimal() +
+  labs(x = "Omic", y = "Score", title = "Mean and 95% CI of the Score for each Omic")
