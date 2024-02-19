@@ -38,7 +38,7 @@ cox_lasso_model_with_offset <- function(df) {
   #offset_values <- df$offset
   
   # Fit Cox model with Lasso using cross-validation
-  fit <- cv.glmnet(x, y, family="cox", alpha=1) 
+  fit <- cv.glmnet(x, y, family="cox", alpha=1)
   #fit <- cv.glmnet(x, y, family="cox", alpha=1, offset=offset_values) 
   
   # Best lambda and model fit
@@ -58,12 +58,14 @@ cox_lasso_model_with_offset <- function(df) {
   return(list(coef=coef_df, lambda=best_lambda, fit=best_fit))
 }
 
-model_results <- cox_lasso_model_with_offset(data)
+# model with all data
+# model_results <- cox_lasso_model_with_offset(data)
  
 #write.csv(model_results$coef, 
 #          "results/glmnet_lasso_coeffs.csv", 
 #          row.names = TRUE)
 
+## Run model with cross validation:
 
 set.seed(123) # for reproducibility
 
@@ -91,6 +93,7 @@ for(i in 1:5){
   
   # Calculate C-index for test data
   c_index <- survConcordance(Surv(test_data$time, test_data$event) ~ predictions)$concordance
+  #c_index <- concordance(Surv(test_data$time, test_data$event) ~ predictions)$concordance
   
   # Save results
   cv_results <- rbind(cv_results, data.frame(fold = i, c_index = c_index))
