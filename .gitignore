@@ -2,6 +2,8 @@
 *.png
 *.RData
 
+.Rhistory
+
 /survival_functions/
 /metrics/
 /processed/

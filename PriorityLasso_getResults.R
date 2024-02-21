@@ -12,7 +12,7 @@ library(dplyr)
 library(tidyr)
 
 
-setwd("Dev/notebooks/thesis_notebook/DaniDatasets/")
+#setwd("Dev/notebooks/thesis_notebook/DaniDatasets/")
 data = read.csv("preprocessed.csv")
 indices = read.csv("indices_for_preprocessed.csv")
 
@@ -39,7 +39,13 @@ set.seed(42)
 folds <- cut(seq(1, nrow(data)), breaks=30, labels=FALSE) # 5-fold CV
 
 # Store results
-cv_results <- data.frame(fold = integer(0), c_index = numeric(0))
+cv_results_1 <- data.frame(fold = integer(0), c_index = numeric(0))
+cv_results_12 <- data.frame(fold = integer(0), c_index = numeric(0))
+cv_results_13 <- data.frame(fold = integer(0), c_index = numeric(0))
+cv_results_123 <- data.frame(fold = integer(0), c_index = numeric(0))
+cv_results_1367 <- data.frame(fold = integer(0), c_index = numeric(0))
+cv_results_13678 <- data.frame(fold = integer(0), c_index = numeric(0))
+cv_results_3678 <- data.frame(fold = integer(0), c_index = numeric(0))
 
 # start crossval and store C-Index
 for(i in 1:30){
@@ -66,25 +72,130 @@ for(i in 1:30){
   x_test <- X[test_indices,]
   y_test = y[test_indices,]
   
+  # 1
   predictions <- predict(
     object = fit, 
     newdata = x_test, 
     type = "response",
-    use.blocks = "all"
-  )
-  
-  # print(predictions)
-  # print(y[test_indices,])
-  
-  # Calculate C-index for test data
-  # c_index <- concordance(y_test ~ predictions)$concordance
-  #c_index <- concordance(y_test, predictions)
+    use.blocks = c(1))
   c_index <- survConcordance(y_test ~ predictions)$concordance
   # Save results
-  cv_results <- rbind(cv_results, data.frame(fold = i, c_index = c_index))
+  cv_results_1 <- rbind(cv_results_1, data.frame(fold = i, c_index = c_index))
+  
+  # 1 e 2
+  predictions <- predict(
+    object = fit, 
+    newdata = x_test, 
+    type = "response",
+    use.blocks = c(1, 2))
+  c_index <- survConcordance(y_test ~ predictions)$concordance
+  # Save results
+  cv_results_12 <- rbind(cv_results_12, data.frame(fold = i, c_index = c_index))
+  
+  # 1 e 3
+  predictions <- predict(
+    object = fit, 
+    newdata = x_test, 
+    type = "response",
+    use.blocks = c(1, 3))
+  c_index <- survConcordance(y_test ~ predictions)$concordance
+  # Save results
+  cv_results_13 <- rbind(cv_results_13, data.frame(fold = i, c_index = c_index))
+  
+  # 1 2 e 3
+  predictions <- predict(
+    object = fit, 
+    newdata = x_test, 
+    type = "response",
+    use.blocks = c(1, 2, 3))
+  c_index <- survConcordance(y_test ~ predictions)$concordance
+  # Save results
+  cv_results_123 <- rbind(cv_results_123, data.frame(fold = i, c_index = c_index))
+  
+  # 1 3 6 7
+  predictions <- predict(
+    object = fit, 
+    newdata = x_test, 
+    type = "response",
+    use.blocks = c(1, 3, 6, 7))
+  c_index <- survConcordance(y_test ~ predictions)$concordance
+  # Save results
+  cv_results_1367 <- rbind(cv_results_1367, data.frame(fold = i, c_index = c_index))
+  
+  # 1 3 6 7 8
+  predictions <- predict(
+    object = fit, 
+    newdata = x_test, 
+    type = "response",
+    use.blocks = c(1, 3, 6, 7, 8))
+  c_index <- survConcordance(y_test ~ predictions)$concordance
+  # Save results
+  cv_results_13678 <- rbind(cv_results_13678, data.frame(fold = i, c_index = c_index))
+  
+  # 3 6 7 8
+  predictions <- predict(
+    object = fit, 
+    newdata = x_test, 
+    type = "response",
+    use.blocks = c(3, 6, 7, 8))
+  c_index <- survConcordance(y_test ~ predictions)$concordance
+  # Save results
+  cv_results_3678 <- rbind(cv_results_3678, data.frame(fold = i, c_index = c_index))
 }
 
 # Calculate average C-index
-mean_c_index <- mean(cv_results$c_index)
-print(mean_c_index)
+cv_res <- cv_results_1[complete.cases(cv_results_1), ]
+cv_res <- cv_res[rowSums(cv_res == 0) == 0, ]
+mean_c_index <- mean(cv_res$c_index)
+print(mean_c_index) #0.600
+ci <- t.test(cv_res$c_index, conf.level = 0.95)
+ci$conf.int[1]
+ci$conf.int[2]
 
+cv_res <- cv_results_12[complete.cases(cv_results_12), ]
+cv_res <- cv_res[rowSums(cv_res == 0) == 0, ]
+mean_c_index <- mean(cv_res$c_index)
+print(mean_c_index) #0.62
+ci <- t.test(cv_res$c_index, conf.level = 0.95)
+ci$conf.int[1]
+ci$conf.int[2]
+
+cv_res <- cv_results_13[complete.cases(cv_results_13), ]
+cv_res <- cv_res[rowSums(cv_res == 0) == 0, ]
+mean_c_index <- mean(cv_res$c_index)
+print(mean_c_index) #0.59
+ci <- t.test(cv_res$c_index, conf.level = 0.95)
+ci$conf.int[1]
+ci$conf.int[2]
+
+cv_res <- cv_results_123[complete.cases(cv_results_123), ]
+cv_res <- cv_res[rowSums(cv_res == 0) == 0, ]
+mean_c_index <- mean(cv_res$c_index)
+print(mean_c_index) #0.612
+ci <- t.test(cv_res$c_index, conf.level = 0.95)
+ci$conf.int[1]
+ci$conf.int[2]
+
+cv_res <- cv_results_1367[complete.cases(cv_results_1367), ]
+cv_res <- cv_res[rowSums(cv_res == 0) == 0, ]
+mean_c_index <- mean(cv_res$c_index)
+print(mean_c_index) #0.614
+ci <- t.test(cv_res$c_index, conf.level = 0.95)
+ci$conf.int[1]
+ci$conf.int[2]
+
+cv_res <- cv_results_13678[complete.cases(cv_results_13678), ]
+cv_res <- cv_res[rowSums(cv_res == 0) == 0, ]
+mean_c_index <- mean(cv_res$c_index)
+print(mean_c_index) #0.63
+ci <- t.test(cv_res$c_index, conf.level = 0.95)
+ci$conf.int[1]
+ci$conf.int[2]
+
+cv_res <- cv_results_3678[complete.cases(cv_results_3678), ]
+cv_res <- cv_res[rowSums(cv_res == 0) == 0, ]
+mean_c_index <- mean(cv_res$c_index)
+print(mean_c_index) #0.5959
+ci <- t.test(cv_res$c_index, conf.level = 0.95)
+ci$conf.int[1]
+ci$conf.int[2]
